@@ -11,9 +11,9 @@ type Verbatim struct {
 
 }
 
-func (t *Verbatim) Compare(c *subr.Context) error {
+func (t *Verbatim) Compare(c *subr.Context) (fresh bool, err error) {
 	if bytes.Compare(c.Data, c.LastData) == 0 {
-		c.Abort()
+		return false, nil
 	}
-	return nil
+	return true, nil
 }

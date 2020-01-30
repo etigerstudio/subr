@@ -3,5 +3,5 @@
 package subr
 
 type Comparator interface {
-	Compare(c *Context) error
+	Compare(c *Context) (fresh bool, err error)
 }
