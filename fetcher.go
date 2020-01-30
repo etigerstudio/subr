@@ -11,9 +11,9 @@ type Fetcher interface {
 type FetchFrequency time.Duration
 
 const (
-	Faster FetchFrequency = FetchFrequency(20 * time.Second)
-	Fast FetchFrequency = FetchFrequency(1 * time.Minute)
-	Normal FetchFrequency = FetchFrequency(5 * time.Minute)
-	Slow FetchFrequency = FetchFrequency(20 * time.Minute)
-	Slower FetchFrequency = FetchFrequency(1 * time.Hour)
+	Faster = FetchFrequency(20 * time.Second)
+	Fast   = FetchFrequency(1 * time.Minute)
+	Normal = FetchFrequency(5 * time.Minute)
+	Slow   = FetchFrequency(20 * time.Minute)
+	Slower = FetchFrequency(1 * time.Hour)
 )
