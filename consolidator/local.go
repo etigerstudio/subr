@@ -10,19 +10,24 @@ import (
 )
 
 type Local struct {
-	Path string
-	Prefix string
+	Path      string
+	Prefix    string
+	Extension string
 }
 
 func (s *Local) Consolidate(c *subr.Context) error {
-	filename := path.Join(s.Path, s.Prefix + "_" + c.StartTimestamp.Format(time.RFC3339))
+	filename := path.Join(s.Path, s.Prefix + "_" +
+		c.StartTimestamp.Format(time.RFC3339) + "." + s.Extension)
 	err := ioutil.WriteFile(filename, c.Data, 0644)
+
+	subr.Infoln("Local file consolidated")
 	return err
 }
 
-func NewLocal(path string, prefix string) Local {
-	return Local{
-		Path:   path,
-		Prefix: prefix,
+func NewLocal(path string, prefix string, extension string) *Local {
+	return &Local{
+		Path:      path,
+		Prefix:    prefix,
+		Extension: extension,
 	}
 }
