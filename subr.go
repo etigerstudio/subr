@@ -12,8 +12,8 @@ type Context struct {
 	*Logger
 
 	StartTimestamp time.Time
-	Data []byte
-	LastData []byte
+	Buckets        map[string]interface{}
+	LastBuckets    map[string]interface{}
 }
 
 type FetchFrequency time.Duration
@@ -26,66 +26,112 @@ const (
 	Slower = FetchFrequency(1 * time.Hour)
 )
 
+type Fetcher interface {
+	Fetch(c *Context) error
+}
+
+type Transpiler interface {
+	Transpile(c *Context) error
+}
+type Comparator interface {
+	Compare(c *Context) (fresh bool, err error)
+}
+
+type Consolidator interface {
+	Consolidate(c *Context) error
+}
+
 type InstanceID string
 
 type Instance struct {
-	Fetcher
-	Transpiler
-	Comparator
-	Consolidator
+	fetchers []Fetcher
+	transpilers []Transpiler
+	comparator Comparator
+	consolidators []Consolidator
 
-	*Logger
+	logger *Logger
 
 	FetchFrequency
-	LastData []byte
+	LastBuckets map[string]interface{}
+}
+
+func (i *Instance) UseFetcher(fetcher Fetcher) *Instance {
+	i.fetchers = append(i.fetchers, fetcher)
+	return i
+}
+
+func (i *Instance) UseTranspiler(transpiler Transpiler) *Instance {
+	i.transpilers = append(i.transpilers, transpiler)
+	return i
+}
+
+func (i *Instance) SetComparator(comparator Comparator) *Instance {
+	i.comparator = comparator
+	return i
+}
+
+func (i *Instance) UseConsolidator(consolidator Consolidator) *Instance {
+	i.consolidators = append(i.consolidators, consolidator)
+	return i
 }
 
 func (i *Instance) Execute() {
-	//TODO: Handle errors
-	i.Logger.Infoln(GetColoredText(" Execution start ", magentaControlText))
+	i.logger.Infoln(GetColoredText(" Execution start ", magentaControlText))
 
 	context := &Context{
 		StartTimestamp: time.Now(),
-		LastData:       i.LastData,
-		Logger:			i.Logger,
-	}
-	err := i.Fetcher.Fetch(context)
-	if err != nil {
-		i.Logger.Warnln(err)
+		Logger:			i.logger,
+		Buckets:		make(map[string]interface{}),
+		LastBuckets:    i.LastBuckets,
 	}
 
-	err = i.Transpiler.Transpile(context)
-	if err != nil {
-		i.Logger.Warnln(err)
+	// Fetching
+	for _, fetcher := range i.fetchers {
+		err := fetcher.Fetch(context)
+		if err != nil {
+			i.logger.Errorln("Error occurred while fetching:", err)
+			return
+		}
 	}
 
-	fresh, err := i.Comparator.Compare(context)
+	// Transpiling
+	for _, transpiler := range i.transpilers {
+		err := transpiler.Transpile(context)
+		if err != nil {
+			i.logger.Errorln("Error occurred while transpiling:", err)
+			return
+		}
+	}
+
+	// Comparing
+	fresh, err := i.comparator.Compare(context)
 	if err != nil {
-		i.Logger.Warnln(err)
+		i.logger.Errorln("Error occurred while comparing:", err)
+		return
 	}
 	if !fresh {
-		i.Logger.Infoln(GetColoredText(" Execution stale pass finished ", whiteControlText))
+		i.logger.Infoln(GetColoredText(" Execution stale pass finished ", whiteControlText))
 		return
 	}
 
-	err = i.Consolidator.Consolidate(context)
-	if err != nil {
-		i.Logger.Warnln(err)
+	// Consolidating
+	for _, consolidator := range i.consolidators {
+		err = consolidator.Consolidate(context)
+		if err != nil {
+			i.logger.Errorln("Error occurred while consolidating:", err)
+			return
+		}
 	}
 
-	i.LastData = context.Data
-
-	i.Logger.Infoln(GetColoredText(" Execution fresh pass finished ", cyanControlText))
+	// Buckets passing
+	i.LastBuckets = context.Buckets
+	i.logger.Infoln(GetColoredText(" Execution fresh pass finished ", cyanControlText))
 }
 
-func NewInstance(frequency FetchFrequency, fetcher Fetcher, transpiler Transpiler,
-	comparator Comparator, consolidator Consolidator) Instance {
-	return Instance{
+func NewInstance(frequency FetchFrequency) *Instance {
+	return &Instance{
 		FetchFrequency: frequency,
-		Fetcher:        fetcher,
-		Transpiler:     transpiler,
-		Comparator:     comparator,
-		Consolidator:   consolidator,
+		LastBuckets:    make(map[string]interface{}),
 	}
 }
 
@@ -102,9 +148,9 @@ func (d *Dispatcher) AttachInstance(id InstanceID, instance *Instance) error {
 	}
 
 	d.instances[id] = instance
-	instance.Logger = &Logger{id}
+	instance.logger = getLoggerForInstance(id)
 	d.addSchedule(instance.FetchFrequency, id)
-	instance.Logger.Infoln(GetColoredText("Instance attached, executing every " +
+	instance.logger.Infoln(GetColoredText("Instance attached, executing every " +
 		strconv.Itoa(int(time.Duration(instance.FetchFrequency)/time.Second)) + " seconds", whiteControlText))
 
 	return nil

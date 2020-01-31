@@ -4,17 +4,17 @@ package fetcher
 
 import (
 	"io/ioutil"
-	"net/http"
+	h "net/http"
 	"subr"
 )
 
-type HTTP struct {
+type http struct {
+	key string
 	url string
-	lastData []byte
 }
 
-func (f *HTTP) Fetch(c *subr.Context) error {
-	response, err := http.Get(f.url)
+func (f *http) Fetch(c *subr.Context) error {
+	response, err := h.Get(f.url)
 	if err != nil {
 		return err
 	}
@@ -25,15 +25,16 @@ func (f *HTTP) Fetch(c *subr.Context) error {
 		return err
 	}
 
-	c.Data = contents
-	c.Logger.Infoln("HTTP Fetch succeeded")
+	c.Buckets[f.key] = contents
+	c.Logger.Infoln("http Fetch succeeded")
 
 	return nil
 }
 
-func NewHTTP(url string) *HTTP {
-	f := &HTTP{
-		url:       url,
+func NewHTTP(key string, url string) *http {
+	f := &http{
+		key: key,
+		url: url,
 	}
 	return f
 }

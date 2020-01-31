@@ -9,25 +9,51 @@ import (
 	"time"
 )
 
-type Local struct {
-	Path      string
-	Prefix    string
-	Extension string
+type local struct {
+	key		  string
+	path      string
+	prefix    string
+	extension string
+	filenameFunc func(c *subr.Context) string
 }
 
-func (s *Local) Consolidate(c *subr.Context) error {
-	filename := path.Join(s.Path, s.Prefix + "_" +
-		c.StartTimestamp.Format(time.RFC3339) + "." + s.Extension)
-	err := ioutil.WriteFile(filename, c.Data, 0644)
+func (s *local) Consolidate(c *subr.Context) error {
+	var filename string
 
-	c.Logger.Infoln("Local file consolidated")
+	// Preparing filename & path
+	if s.filenameFunc != nil {
+		filename = s.filenameFunc(c)
+	} else {
+		filename = s.prefix + "_" +
+			c.StartTimestamp.Format(time.RFC3339) + "." + s.extension
+	}
+	filepath := path.Join(s.path, filename)
+
+	// Writing file
+	data, err := subr.CastBucketToBytes(c.Buckets, s.key)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(filepath, data, 0644)
+
+	c.Logger.Infoln("local file consolidated")
 	return err
 }
 
-func NewLocal(path string, prefix string, extension string) *Local {
-	return &Local{
-		Path:      path,
-		Prefix:    prefix,
-		Extension: extension,
+func NewLocal(key string, path string, prefix string, extension string) *local {
+	return &local{
+		key:       key,
+		path:      path,
+		prefix:    prefix,
+		extension: extension,
+	}
+}
+
+func NewLocalWithFilenameFunc(key string, path string,
+	filenameFunc func(c *subr.Context) string) *local {
+	return &local{
+		key:          key,
+		path:         path,
+		filenameFunc: filenameFunc,
 	}
 }
