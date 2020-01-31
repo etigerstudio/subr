@@ -9,7 +9,7 @@ type Verbatim struct {
 }
 
 func (t *Verbatim) Transpile(c *subr.Context) error {
-	subr.Infoln("Verbatim transpiler passed")
+	c.Logger.Infoln("Verbatim transpiler passed")
 	return nil
 }
 

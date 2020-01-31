@@ -26,7 +26,7 @@ func (f *HTTP) Fetch(c *subr.Context) error {
 	}
 
 	c.Data = contents
-	subr.Infoln("HTTP Fetch succeeded")
+	c.Logger.Infoln("HTTP Fetch succeeded")
 
 	return nil
 }

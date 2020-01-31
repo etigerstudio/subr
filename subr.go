@@ -4,10 +4,13 @@ package subr
 
 import (
 	"errors"
+	"strconv"
 	"time"
 )
 
 type Context struct {
+	*Logger
+
 	StartTimestamp time.Time
 	Data []byte
 	LastData []byte
@@ -31,45 +34,48 @@ type Instance struct {
 	Comparator
 	Consolidator
 
+	*Logger
+
 	FetchFrequency
 	LastData []byte
 }
 
 func (i *Instance) Execute() {
 	//TODO: Handle errors
-	Infoln("-- Execution start")
+	i.Logger.Infoln(GetColoredText(" Execution start ", magentaControlText))
 
 	context := &Context{
 		StartTimestamp: time.Now(),
 		LastData:       i.LastData,
+		Logger:			i.Logger,
 	}
 	err := i.Fetcher.Fetch(context)
 	if err != nil {
-		Warnln(err)
+		i.Logger.Warnln(err)
 	}
 
 	err = i.Transpiler.Transpile(context)
 	if err != nil {
-		Warnln(err)
+		i.Logger.Warnln(err)
 	}
 
 	fresh, err := i.Comparator.Compare(context)
 	if err != nil {
-		Warnln(err)
+		i.Logger.Warnln(err)
 	}
 	if !fresh {
-		Infoln("-- Execution stale pass finished")
+		i.Logger.Infoln(GetColoredText(" Execution stale pass finished ", whiteControlText))
 		return
 	}
 
 	err = i.Consolidator.Consolidate(context)
 	if err != nil {
-		Warnln(err)
+		i.Logger.Warnln(err)
 	}
 
 	i.LastData = context.Data
 
-	Infoln("-- Execution fresh pass finished")
+	i.Logger.Infoln(GetColoredText(" Execution fresh pass finished ", cyanControlText))
 }
 
 func NewInstance(frequency FetchFrequency, fetcher Fetcher, transpiler Transpiler,
@@ -96,7 +102,10 @@ func (d *Dispatcher) AttachInstance(id InstanceID, instance *Instance) error {
 	}
 
 	d.instances[id] = instance
+	instance.Logger = &Logger{id}
 	d.addSchedule(instance.FetchFrequency, id)
+	instance.Logger.Infoln(GetColoredText("Instance attached, executing every " +
+		strconv.Itoa(int(time.Duration(instance.FetchFrequency)/time.Second)) + " seconds", whiteControlText))
 
 	return nil
 }

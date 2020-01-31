@@ -20,7 +20,7 @@ func (s *Local) Consolidate(c *subr.Context) error {
 		c.StartTimestamp.Format(time.RFC3339) + "." + s.Extension)
 	err := ioutil.WriteFile(filename, c.Data, 0644)
 
-	subr.Infoln("Local file consolidated")
+	c.Logger.Infoln("Local file consolidated")
 	return err
 }
 
