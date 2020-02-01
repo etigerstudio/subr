@@ -158,14 +158,14 @@ type Dispatcher struct {
 
 func (d *Dispatcher) AttachInstance(id InstanceID, instance *Instance) error {
 	if d.instances[id] != nil {
-		return errors.New("Instance of ID: " + string(id) + "already exists.")
+		return errors.New("Instance of ID: " + string(id) + " already exists")
 	}
 
 	d.instances[id] = instance
 	instance.logger = getLoggerForInstance(id)
 	d.addSchedule(instance.FetchFrequency, id)
-	instance.logger.Infoln(GetColoredText("Instance attached, executing every " +
-		strconv.Itoa(int(time.Duration(instance.FetchFrequency)/time.Second)) + " seconds", whiteControlText))
+	instance.logger.Infoln(GetColoredText(" Instance attached, executing every " +
+		strconv.Itoa(int(time.Duration(instance.FetchFrequency)/time.Second)) + " seconds ", whiteControlText))
 
 	return nil
 }

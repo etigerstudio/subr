@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	SubrPrefix = "[SUBR]"
+	//SubrPrefix = "[SUBR]"
 	InfoPrefix = "INFO"
 	WarningPrefix = "WARN"
 	ErrorPrefix = "ERRR"
@@ -30,7 +30,8 @@ type Logger struct {
 }
 
 func getCommonPrefix() string {
-	return SubrPrefix + " " + time.Now().Format("2006/01/02 - 15:04:05")
+	//return SubrPrefix + " " + time.Now().Format("2006/01/02 - 15:04:05")
+	return " " + time.Now().Format("2006/01/02 - 15:04:05")
 }
 
 func getStatusPrefix(statusPrefix string, textColor string) string {
