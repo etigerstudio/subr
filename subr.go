@@ -86,6 +86,10 @@ func (i *Instance) Execute() {
 	}
 
 	// Fetching
+	if len(i.fetchers) == 0 {
+		i.logger.Errorln("No attached fetchers: One fetcher at least is required to bootstrap execution")
+		return
+	}
 	for _, fetcher := range i.fetchers {
 		err := fetcher.Fetch(context)
 		if err != nil {
@@ -95,6 +99,9 @@ func (i *Instance) Execute() {
 	}
 
 	// Transpiling
+	if len(i.transpilers) == 0 {
+		i.logger.Errorln("No attached transpilers: No transpiling will be applied")
+	}
 	for _, transpiler := range i.transpilers {
 		err := transpiler.Transpile(context)
 		if err != nil {
@@ -104,19 +111,26 @@ func (i *Instance) Execute() {
 	}
 
 	// Comparing
-	fresh, err := i.comparator.Compare(context)
-	if err != nil {
-		i.logger.Errorln("Error occurred while comparing:", err)
-		return
-	}
-	if !fresh {
-		i.logger.Infoln(GetColoredText(" Execution stale pass finished ", whiteControlText))
-		return
+	if i.comparator == nil {
+		i.logger.Infoln("No comparator attached: Fresh pass is assumed")
+	} else {
+		fresh, err := i.comparator.Compare(context)
+		if err != nil {
+			i.logger.Errorln("Error occurred while comparing:", err)
+			return
+		}
+		if !fresh {
+			i.logger.Infoln(GetColoredText(" Execution stale pass finished ", whiteControlText))
+			return
+		}
 	}
 
 	// Consolidating
+	if len(i.consolidators) == 0 {
+		i.logger.Warnln("No attached consolidators: No buckets will be saved")
+	}
 	for _, consolidator := range i.consolidators {
-		err = consolidator.Consolidate(context)
+		err := consolidator.Consolidate(context)
 		if err != nil {
 			i.logger.Errorln("Error occurred while consolidating:", err)
 			return
