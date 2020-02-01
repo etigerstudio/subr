@@ -4,7 +4,7 @@ package comparator
 
 import (
 	"bytes"
-	"subr"
+	"github.com/etigerstudio/subr"
 )
 
 type byteSlice struct {

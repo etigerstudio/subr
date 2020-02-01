@@ -3,9 +3,9 @@
 package fetcher
 
 import (
+	"github.com/etigerstudio/subr"
 	"io/ioutil"
 	h "net/http"
-	"subr"
 )
 
 type http struct {

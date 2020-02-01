@@ -3,9 +3,9 @@
 package consolidator
 
 import (
+	"github.com/etigerstudio/subr"
 	"io/ioutil"
 	"path"
-	"subr"
 	"time"
 )
 
