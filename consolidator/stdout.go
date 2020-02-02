@@ -17,6 +17,7 @@ func (s *stdout) Consolidate(c *subr.Context) error {
 	if !ok {
 		return errors.New("cannot read bucket: " + s.key +" as bytes")
 	}
+	c.Logger.Infoln("stdout consolidator '" + s.key + "':")
 	fmt.Print(string(bytes))
 	return nil
 }
