@@ -171,7 +171,7 @@ func (d *Dispatcher) AttachInstance(id InstanceID, instance *Instance) error {
 	instance.logger = getLoggerForInstance(id)
 	d.addSchedule(instance.FetchFrequency, id)
 	instance.logger.Infoln(GetColoredText(" Instance attached, executing every " +
-		strconv.Itoa(int(time.Duration(instance.FetchFrequency)/time.Second)) + " seconds ", whiteControlText))
+		fmt.Sprintf("%.1f", time.Duration(instance.FetchFrequency).Seconds()) + " seconds ", whiteControlText))
 
 	return nil
 }
