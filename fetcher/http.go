@@ -31,6 +31,7 @@ func (f *http) Fetch(c *subr.Context) error {
 	return nil
 }
 
+// TODO: Add support for custom dynamic url func
 func NewHTTP(key string, url string) *http {
 	f := &http{
 		key: key,
