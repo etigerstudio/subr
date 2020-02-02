@@ -4,7 +4,7 @@ package subr
 
 import (
 	"errors"
-	"strconv"
+	"fmt"
 	"time"
 )
 
@@ -26,6 +26,11 @@ const (
 	Slower = FetchFrequency(1 * time.Hour)
 )
 
+//type FetchFunc func(c *Context) error
+type TranspileFunc func(c *Context) error
+type CompareFunc func(c *Context) (fresh bool, err error)
+//type ConsolidateFunc func(c *Context) error
+
 type Fetcher interface {
 	Fetch(c *Context) error
 }
@@ -33,6 +38,7 @@ type Fetcher interface {
 type Transpiler interface {
 	Transpile(c *Context) error
 }
+
 type Comparator interface {
 	Compare(c *Context) (fresh bool, err error)
 }
@@ -100,7 +106,7 @@ func (i *Instance) Execute() {
 
 	// Transpiling
 	if len(i.transpilers) == 0 {
-		i.logger.Errorln("No attached transpilers: No transpiling will be applied")
+		i.logger.Infoln("No attached transpilers: No transpiling is applied")
 	}
 	for _, transpiler := range i.transpilers {
 		err := transpiler.Transpile(context)
@@ -112,7 +118,7 @@ func (i *Instance) Execute() {
 
 	// Comparing
 	if i.comparator == nil {
-		i.logger.Infoln("No comparator attached: Fresh pass is assumed")
+		i.logger.Infoln("No attached comparator: Fresh pass is assumed")
 	} else {
 		fresh, err := i.comparator.Compare(context)
 		if err != nil {
@@ -127,7 +133,7 @@ func (i *Instance) Execute() {
 
 	// Consolidating
 	if len(i.consolidators) == 0 {
-		i.logger.Warnln("No attached consolidators: No buckets will be saved")
+		i.logger.Warnln("No attached consolidators: No buckets are saved")
 	}
 	for _, consolidator := range i.consolidators {
 		err := consolidator.Consolidate(context)
