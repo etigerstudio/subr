@@ -5,7 +5,6 @@ package subr
 import (
 	"fmt"
 	"log"
-	"time"
 )
 
 const (
@@ -30,10 +29,10 @@ type Logger struct {
 	InstanceID
 }
 
-func getCommonPrefix() string {
-	//return SubrPrefix + " " + time.Now().Format("2006/01/02 - 15:04:05")
-	return " " + time.Now().Format("2006/01/02 - 15:04:05")
-}
+//func getCommonPrefix() string {
+//	//return SubrPrefix + " " + time.Now().Format("2006/01/02 - 15:04:05")
+//	return " " + time.Now().Format("2006/01/02 - 15:04:05")
+//}
 
 func getStatusPrefix(statusPrefix string, textColor string) string {
 	//return " " + statusPrefix + " "
@@ -83,7 +82,7 @@ func (l *Logger) Errorf(format string, v ...interface{}) {
 }
 
 func logln(statusPrefix string, id InstanceID, v ...interface{}) {
-	log.Print(getCommonPrefix() + " |" + statusPrefix + "| |" + getInstancePrefix(id) + "| " + fmt.Sprintln(v...))
+	log.Print("|" + statusPrefix + "| |" + getInstancePrefix(id) + "| " + fmt.Sprintln(v...))
 }
 
 func logf(statusPrefix string, id InstanceID, format string, v ...interface{}) {
