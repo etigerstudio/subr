@@ -15,7 +15,7 @@ import (
 )
 
 type script struct {
-	key                 string
+	stdoutBytesKey      string
 	command             string
 	args                []string
 	workingDir          string
@@ -40,7 +40,7 @@ func (s *script) Fetch(c *subr.Context) error {
 			err, stdout.String(), stderr.String()))
 	}
 
-	c.Buckets[s.key] = stdout.Bytes()
+	c.Buckets[s.stdoutBytesKey] = stdout.Bytes()
 	duration := time.Now().Sub(startTimestamp)
 
 	if s.detectModifiedFiles {
@@ -49,7 +49,7 @@ func (s *script) Fetch(c *subr.Context) error {
 			if err != nil {
 				return err
 			}
-			if info.ModTime().After(startTimestamp) {
+			if !info.IsDir() && info.ModTime().After(startTimestamp) {
 				modified = append(modified, path)
 			}
 			return nil
@@ -63,7 +63,10 @@ func (s *script) Fetch(c *subr.Context) error {
 
 	prompt := "'" + s.command + "' is executed in " + fmt.Sprintf("%.1f", duration.Seconds()) + " seconds"
 	if s.detectModifiedFiles {
-		prompt += ": " + strconv.Itoa(len(modified)) + " file modifications:"
+		prompt += ": " + strconv.Itoa(len(modified)) + " file modifications"
+		if len(modified) > 0 {
+			prompt += ":"
+		}
 		for _, m := range modified {
 			prompt += "\n" + m
 		}
@@ -73,20 +76,21 @@ func (s *script) Fetch(c *subr.Context) error {
 	return nil
 }
 
-func NewScript(key string, command string, args []string, workingDir string) *script {
+// TODO: Discard data whenever key = ""
+func NewScript(stdoutBytesKey string, command string, args []string, workingDir string) *script {
 	s := &script{
-		key:        key,
-		command:    command,
-		args:       args,
-		workingDir: workingDir,
+		stdoutBytesKey: stdoutBytesKey,
+		command:        command,
+		args:           args,
+		workingDir:     workingDir,
 	}
 	return s
 }
 
-func NewScriptDetectingNewFiles(key string, command string, args []string,
+func NewScriptDetectingNewFiles(stdoutBytesKey string, command string, args []string,
 	workingDir string, modifiedFilesKey string, watchingDir string) *script {
 	s := &script{
-		key:                 key,
+		stdoutBytesKey:      stdoutBytesKey,
 		command:             command,
 		args:                args,
 		workingDir:          workingDir,
