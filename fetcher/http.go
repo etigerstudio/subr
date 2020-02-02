@@ -5,7 +5,7 @@ package fetcher
 import (
 	"github.com/etigerstudio/subr"
 	"io/ioutil"
-	h "net/http"
+	nethttp "net/http"
 )
 
 type http struct {
@@ -13,8 +13,8 @@ type http struct {
 	url string
 }
 
-func (f *http) Fetch(c *subr.Context) error {
-	response, err := h.Get(f.url)
+func (h *http) Fetch(c *subr.Context) error {
+	response, err := nethttp.Get(h.url)
 	if err != nil {
 		return err
 	}
@@ -25,7 +25,7 @@ func (f *http) Fetch(c *subr.Context) error {
 		return err
 	}
 
-	c.Buckets[f.key] = contents
+	c.Buckets[h.key] = contents
 	c.Logger.Infoln("http Fetch succeeded")
 
 	return nil
