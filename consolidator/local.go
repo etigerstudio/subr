@@ -17,20 +17,20 @@ type local struct {
 	filenameFunc func(c *subr.Context) string
 }
 
-func (s *local) Consolidate(c *subr.Context) error {
+func (l *local) Consolidate(c *subr.Context) error {
 	var filename string
 
 	// Preparing filename & path
-	if s.filenameFunc != nil {
-		filename = s.filenameFunc(c)
+	if l.filenameFunc != nil {
+		filename = l.filenameFunc(c)
 	} else {
-		filename = s.prefix + "_" +
-			c.StartTimestamp.Format(time.RFC3339) + "." + s.extension
+		filename = l.prefix + "_" +
+			c.StartTimestamp.Format(time.RFC3339) + "." + l.extension
 	}
-	filepath := path.Join(s.path, filename)
+	filepath := path.Join(l.path, filename)
 
 	// Writing file
-	data, err := subr.CastBucketToBytes(c.Buckets, s.key)
+	data, err := subr.CastBucketToBytes(c.Buckets, l.key)
 	if err != nil {
 		return err
 	}
@@ -49,6 +49,8 @@ func NewLocal(key string, path string, prefix string, extension string) *local {
 	}
 }
 
+// TODO: Refactor either using local as argument or
+//       reading name from specific bucket
 func NewLocalWithFilenameFunc(key string, path string,
 	filenameFunc func(c *subr.Context) string) *local {
 	return &local{
